@@ -26,12 +26,12 @@
 <body>
     <!-- Header Section -->
      <header class="header">
-        <a href="#" class="logo"> 
+        <a href="index.php" class="logo"> 
             <i class="fa fa-cart-plus" aria-hidden="true"></i>
             <span>Grocery Plus</span>
         </a>
 
-    <nav class="navbar">
+    <nav class="navbar" >
         <a href="#home">home</a>
         <a href="#features">features</a>
         <a href="#products">products</a>
@@ -54,6 +54,15 @@
             <label for="search-box" class="fa fa-search"></label>
         </form>
 
+        <form action="login.php" method="POST" class="login-form">
+          <h3>Login Now</h3>
+          <input type="username" placeholder="Username" class="box" name="username">
+          <input type="password" placeholder="Password" class="box" name="password">
+
+          <p>Don't have an account?<a href="register.php">Create Now</a></p>
+          <input type="submit" value="Login Now" class="btn">
+        </form>
+
 
      </header>
     <!-- Header Section -->
@@ -66,8 +75,8 @@
            <p> Fresh Products, Great Prices, and Fast Delivery!<br>
             Everything you need in one place!</p>
             <br>
-           <!-- <a href="#" class="btn">Shop Now</a> -->
-           <button class="btn">Shop Now</button>
+           <a href="#products" class="btn">Shop Now</a>
+           
         </div>
     </section>
 
@@ -293,6 +302,8 @@
     </div>
 </div>
  </section>
+
+
 
 
 
