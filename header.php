@@ -17,12 +17,12 @@
         </a>
 
     <nav class="navbar" >
-        <a href="#home">home</a>
-        <a href="features.html">features</a>
-        <a href="#products">products</a>
-        <a href="#categories">categories</a>
-        <a href="#review">review</a>
-        <a href="#about">about</a>
+        <a href="home.php">home</a>
+        <a href="features.php">features</a>
+        <a href="products.php">products</a>
+        <a href="categories.php">categories</a>
+        <a href="review.php">review</a>
+        <a href="about.php">about</a>
     </nav>
 </header>
 <?php

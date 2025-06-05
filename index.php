@@ -33,9 +33,9 @@
 
     <nav class="navbar" >
         <a href="#home">home</a>
-        <a href="features.html">features</a>
+        <a href="features.php">features</a>
         <a href="#products">products</a>
-        <a href="categories.html">categories</a>
+        <a href="categories.php">categories</a>
         <a href="#review">review</a>
         <a href="#about">about</a>
     </nav>
