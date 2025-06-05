@@ -33,7 +33,7 @@ if (isset($_POST['submit'])) {
 <head>
    <meta charset="UTF-8">
    <title>Login</title>
-   <link rel="stylesheet" href="css/style.css">
+   <link rel="stylesheet" href="css/components.css">
 </head>
 <body>
 
@@ -42,7 +42,7 @@ if (isset($_POST['submit'])) {
       echo '<div class="message"><span>' . $msg . '</span></div>';
    }
 } ?>
-
+<div class="register-body">
 <section class="form-container">
    <form action="" method="POST">
       <h3>Login Now</h3>
@@ -52,6 +52,7 @@ if (isset($_POST['submit'])) {
       <p>Don't have an account? <a href="register.php">Register Now</a></p>
    </form>
 </section>
+</div>
 
 </body>
 </html>

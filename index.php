@@ -1,3 +1,7 @@
+<?php
+session_start();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -32,12 +36,12 @@
         </a>
 
     <nav class="navbar" >
-        <a href="#home">home</a>
+        <a href="index.php">home</a>
         <a href="features.php">features</a>
-        <a href="#products">products</a>
+        <a href="products.php">products</a>
         <a href="categories.php">categories</a>
-        <a href="#review">review</a>
-        <a href="#about">about</a>
+        <a href="review.php">review</a>
+        <a href="about.php">about</a>
     </nav>
 
 
@@ -46,24 +50,28 @@
         <div class="fa fa-bars" id="menu-btn"></div>
         <div class="fa fa-search" id="search-btn"></div>
         <div class="fa fa-shopping-cart" id="cart-btn"></div>
-        <div class="fa fa-user" id="login-btn"></div>
+        <!-- <div class="fa fa-user" id="login-btn"></div> -->
         
     </div>
         <form class="search-form">
             <input type="search" id="search-box" placeholder="Search Here....">
             <label for="search-box" class="fa fa-search"></label>
         </form>
+        
+        
 
-        <form action="login.php" method="POST" class="login-form">
-          <h3>Login Now</h3>
-          <input type="username" placeholder="Username" class="box" name="username">
-          <input type="password" placeholder="Password" class="box" name="password">
+        
+        
 
-          <p>Don't have an account?<a href="register.php">Create Now</a></p>
-          <input type="submit" value="Login Now" class="btn">
+        <form action="register.php" method="POST">
+        <p><a href="register.php">
+        <input type="submit" value="Register" class="reg-btn"></a></p>
         </form>
-
-
+        <form action="login.php" method="POST" >
+        <a href="login.php">
+          <p>
+        <input type="submit" value="Login" class="log-btn"></P>
+        </form>
      </header>
     <!-- Header Section -->
 

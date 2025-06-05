@@ -13,7 +13,7 @@
     --orange:orange;
     --box-shadow:0 .5rem 1.5rem rgba(0,0,0,.1);
 
-    --border:2rem solid rgba(0,0,0.1);
+    --border:.2rem solid rgba(0,0,0.1);
     --outline:1rem rgba(0,0,0.1);
 }
 
@@ -186,51 +186,28 @@ body
   background-color: var(--green);
   color: #fff;
 }
-.header .login-form {
-  position: absolute;
-  top: 110%;
-  right: -110rem;
-  width: 30rem;
-  padding: 2rem;
-  text-align: center;
-  background-color: #fff;
-  box-shadow: var(--box-shadow);
-  border:0px solid;
-  border-radius: .5rem;
-}
-
- .header .login-form h3 {
-  font-size:2.5rem;
-  text-transform: uppercase;
-  color:var(--black);
-}
-.header .login-form .box{
-  width:100%;
-  border:0px solid;
-  margin:.7rem 0;
-  background: #eee;
-  border-radius: 0.5rem;
-  padding: 1rem;
+ header .reg-btn,.log-btn{
+  width: 100%;
   font-size:1.6rem;
-  color:var(--black);
-  text-transform: none;
-
-
-}
-.header .login-form  p{
-  font-size:1.4rem;
-  padding:0.5rem 0;
-  color:var(--light-color);
+  color: #fff;
+  padding: 0.8rem 3rem;
+  margin-top: 1rem;
+  border: 0.2rem solid var(--black);
+  background-color: var(--light-color);
+  border-radius: 0.5rem;
+  cursor: pointer;
 
 }
-.header .login-form  p a{
-  text-decoration: underline  ;
-  color: var(--orange);
+header .reg-btn:hover {
+  background-color: var(--green);
+  color: #fff;
 }
-.header .login-form.active{
-  right:2rem;
-  transition: .4 linear;
+ header .log-btn:hover {
+  background-color: var(--green);
+  color: #fff;
 }
+
+
 /* home */
 
 .home
@@ -521,22 +498,7 @@ body
 
 
 
-/* Form container */
-.register-body{
-  background-image: url(../image/bg.png);
-  background-repeat: no-repeat;
-  background-size: auto;
 
-}
-.form-container {
-  width: 450px;
-  margin: 80px auto;
-  padding: 50px;
-  background-image: url(image/bg.png);
-  border: 1px solid green;
-  border-radius: 10px;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-}
 
 /* Heading */
 h1 {
