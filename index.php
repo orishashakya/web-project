@@ -33,11 +33,11 @@
 
     <nav class="navbar" >
         <a href="#home">home</a>
-        <a href="#features">features</a>
+        <a href="features.html">features</a>
         <a href="#products">products</a>
-        <a href="#categories">categories</a>
+        <a href="categories.html">categories</a>
         <a href="#review">review</a>
-        <a href="#blogs">blogs</a>
+        <a href="#about">about</a>
     </nav>
 
 
@@ -302,6 +302,9 @@
     </div>
 </div>
  </section>
+<?php
+
+?>
 
 
 
@@ -317,7 +320,7 @@
 
 
 
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    
 
 <script src="js/script.js"></script>   
  

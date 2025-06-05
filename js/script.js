@@ -47,13 +47,23 @@ window.onscroll = () => {
 
 
 /*slide*/
-    let slider = document.querySelector('.slider'); 
-        let scrollAmount = slider.clientWidth; 
-        document.querySelector("#nextbtn").addEventListener("click", () => { 
-            slider.scrollLeft += scrollAmount;      }); 
-        document.querySelector("#backbtn").addEventListener("click", () => { 
-            slider.scrollLeft -= scrollAmount;      });
 
+document.querySelector('#menu-btn').onclick = () =>{
+   navbar.classList.toggle('active');
+   profile.classList.remove('active');
+}
+
+let profile = document.querySelector('.header .flex .profile');
+
+document.querySelector('#user-btn').onclick = () =>{
+   profile.classList.toggle('active');
+   navbar.classList.remove('active');
+}
+
+window.onscroll = () =>{
+   profile.classList.remove('active');
+   navbar.classList.remove('active');
+}
 
 
 

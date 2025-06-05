@@ -18,10 +18,31 @@
 
     <nav class="navbar" >
         <a href="#home">home</a>
-        <a href="#features">features</a>
+        <a href="features.html">features</a>
         <a href="#products">products</a>
         <a href="#categories">categories</a>
         <a href="#review">review</a>
-        <a href="#blogs">blogs</a>
+        <a href="#about">about</a>
     </nav>
 </header>
+<?php
+if (session_status() === PHP_SESSION_NONE) session_start();
+?>
+
+<header>
+   <nav>
+      <a href="index.php">Home</a>
+
+      <?php if (isset($_SESSION['user_id'])): ?>
+         <a href="userprofile.php" class="btn">My Profile</a>
+         <a href="logout.php" class="btn">Logout</a>
+      <?php elseif (isset($_SESSION['admin_id'])): ?>
+         <a href="admin_page.php" class="btn">Admin Panel</a>
+         <a href="logout.php" class="btn">Logout</a>
+      <?php else: ?>
+         <a href="login.php" class="btn">Login</a>
+         <a href="register.php" class="btn">Register</a>
+      <?php endif; ?>
+   </nav>
+</header>
+

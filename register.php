@@ -1,64 +1,106 @@
 <?php
-include "header.php";
+include 'config.php';
+
+$message = [];
+
+if (isset($_POST['submit'])) {
+
+    // Sanitize inputs
+    $name = filter_var($_POST['name'], FILTER_SANITIZE_STRING);
+    $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
+
+    // Hash passwords with md5 (consider using password_hash() for better security)
+    $pass = md5($_POST['pass']);
+    $cpass = md5($_POST['cpass']);
+
+    // File info
+    $image = filter_var($_FILES['image']['name'], FILTER_SANITIZE_STRING);
+    $image_size = $_FILES['image']['size'];
+    $image_tmp_name = $_FILES['image']['tmp_name'];
+    $image_folder = 'uploaded_img/' . $image;
+
+    // Check if email already exists
+    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($result->num_rows > 0) {
+        $message[] = 'User email already exists!';
+    } else {
+        if ($pass != $cpass) {
+            $message[] = 'Confirm password does not match!';
+        } else {
+            $stmt = $conn->prepare("INSERT INTO users (name, email, password, image) VALUES (?, ?, ?, ?)");
+            $stmt->bind_param("ssss", $name, $email, $pass, $image);
+
+            if ($stmt->execute()) {
+                if ($image_size > 2000000) {
+                    $message[] = 'Image size is too large!';
+                } else {
+                    if (!is_dir('uploaded_img')) {
+                        mkdir('uploaded_img', 0755, true);
+                    }
+                    
+                    if (is_uploaded_file($image_tmp_name)) {
+                        if (move_uploaded_file($image_tmp_name, $image_folder)) {
+                            header('Location: login.php');
+                            exit;
+                        } else {
+                            $message[] = 'Failed to move the uploaded file.';
+                        }
+                    } else {
+                        $message[] = 'Uploaded file is invalid.';
+                    }
+                    
+                }
+            } else {
+                $message[] = 'Registration failed: ' . $stmt->error;
+            }
+        }
+    }
+
+    $stmt->close();
+}
 ?>
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>Register for Groceries</title>
-    <link rel="stylesheet" href="css/style.css">
-    <script>
-       function validateForm() {
-    const phone = document.forms["registerForm"]["phone"].value;
-    const email = document.forms["registerForm"]["email"].value;
-
-    const phonePattern = /^[0-9]{10}$/;
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!phonePattern.test(phone)) {
-        alert("Please enter a valid 10-digit phone number.");
-        return false;
-    }
-
-    if (!emailPattern.test(email)) {
-        alert("Please enter a valid email address.");
-        return false;
-    }
-
-    return true; // allow form submission
-}
-
-    </script>
+    <meta charset="UTF-8" />
+    <title>Register</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
 </head>
-<body class="register-body">
 
-<div class="form-container">
-    <h1>Registration Form Of Grocery Store</h1>
-    <form name="registerForm" action="register.php" method="POST" onsubmit="return validateForm();">
-        <label>First Name:</label>
-        <input type="text" name="first_name" required pattern="[A-Za-z]+" title="Only letters allowed">
+<body>
 
-        <label>Last Name:</label>
-        <input type="text" name="last_name" required pattern="[A-Za-z]+" title="Only letters allowed">
-
-        <label>Email:</label>
-        <input type="email" name="email" required>
-
-        <label>Phone:</label>
-        <input type="tel" name="phone" required placeholder="e.g. 9876543210" pattern="[0-9]{10}" title="Enter a 10-digit phone number">
-
-        <label>Address:</label>
-        <input type="text" name="address" required>
-
-        <label>Password:</label>
-        <input type="password" name="password" required minlength="6" title="Password must be at least 6 characters">
-
-        <button type="submit" class="btn">Register</button>
-    </form>
+    <?php
+    if (!empty($message)) {
+        foreach ($message as $msg) {
+            echo '
+      <div class="message">
+         <span>' . htmlspecialchars($msg) . '</span>
+         <i class="fas fa-times" onclick="this.parentElement.remove();"></i>
+      </div>';
+        }
+    }
+    ?>
+<div class="register-body">
+    <section class="form-container">
+        <form action="" method="POST" enctype="multipart/form-data">
+            <h3>Register now</h3>
+            <input type="text" name="name" class="box" placeholder="Enter your name" required />
+            <input type="email" name="email" class="box" placeholder="Enter your email" required />
+            <input type="password" name="pass" class="box" placeholder="Enter your password" required />
+            <input type="password" name="cpass" class="box" placeholder="Confirm your password" required />
+            <input type="file" name="image" class="box" required accept="image/jpg, image/jpeg, image/png" />
+            <input type="submit" value="Register now" class="btn" name="submit" />
+            <p>Already have an account? <a href="login.php">Login now</a></p>
+        </form>
+    </section>
 </div>
 
 </body>
+
 </html>
-
-
-</div>
-</div>
