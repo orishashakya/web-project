@@ -6,61 +6,80 @@ $message = [];
 if (isset($_POST['submit'])) {
 
     // Sanitize inputs
-    $name = filter_var($_POST['name'], FILTER_SANITIZE_STRING);
-    $email = filter_var($_POST['email'], FILTER_SANITIZE_EMAIL);
-
-    // Hash passwords with md5 (consider using password_hash() for better security)
-    $pass = md5($_POST['pass']);
-    $cpass = md5($_POST['cpass']);
+    $name = trim($_POST['name']);
+    $email = filter_var(trim($_POST['email']), FILTER_VALIDATE_EMAIL);
+    $pass = $_POST['pass'];
+    $cpass = $_POST['cpass'];
 
     // File info
-    $image = filter_var($_FILES['image']['name'], FILTER_SANITIZE_STRING);
-    $image_size = $_FILES['image']['size'];
-    $image_tmp_name = $_FILES['image']['tmp_name'];
-    $image_folder = 'uploaded_img/' . $image;
+    $image = $_FILES['image'] ?? null;
 
-    // Check if email already exists
-    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows > 0) {
-        $message[] = 'User email already exists!';
+    // Basic validation
+    if (!$email) {
+        $message[] = 'Invalid email address!';
+    }
+    if (strlen($pass) < 6) {
+        $message[] = 'Password must be at least 6 characters!';
+    }
+    if ($pass !== $cpass) {
+        $message[] = 'Confirm password does not match!';
+    }
+    if (!$image || $image['error'] !== UPLOAD_ERR_OK) {
+        $message[] = 'Please upload a valid image file.';
     } else {
-        if ($pass != $cpass) {
-            $message[] = 'Confirm password does not match!';
-        } else {
-            $stmt = $conn->prepare("INSERT INTO users (name, email, password, image) VALUES (?, ?, ?, ?)");
-            $stmt->bind_param("ssss", $name, $email, $pass, $image);
-
-            if ($stmt->execute()) {
-                if ($image_size > 2000000) {
-                    $message[] = 'Image size is too large!';
-                } else {
-                    if (!is_dir('uploaded_img')) {
-                        mkdir('uploaded_img', 0755, true);
-                    }
-                    
-                    if (is_uploaded_file($image_tmp_name)) {
-                        if (move_uploaded_file($image_tmp_name, $image_folder)) {
-                            header('Location: login.php');
-                            exit;
-                        } else {
-                            $message[] = 'Failed to move the uploaded file.';
-                        }
-                    } else {
-                        $message[] = 'Uploaded file is invalid.';
-                    }
-                    
-                }
-            } else {
-                $message[] = 'Registration failed: ' . $stmt->error;
-            }
+        $allowed_ext = ['jpg', 'jpeg', 'png'];
+        $image_ext = strtolower(pathinfo($image['name'], PATHINFO_EXTENSION));
+        if (!in_array($image_ext, $allowed_ext)) {
+            $message[] = 'Invalid image format! Only JPG, JPEG, PNG allowed.';
+        }
+        if ($image['size'] > 2 * 1024 * 1024) {
+            $message[] = 'Image size must be less than 2MB.';
         }
     }
 
-    $stmt->close();
+    // If no errors so far
+    if (empty($message)) {
+
+        // Check if email already exists
+        $stmt = $conn->prepare("SELECT * FROM users WHERE email = ?");
+        $stmt->bind_param("s", $email);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        if ($result->num_rows > 0) {
+            $message[] = 'User email already exists!';
+        } else {
+            // Hash password securely
+            $hashed_pass = password_hash($pass, PASSWORD_DEFAULT);
+
+            // Create upload folder if doesn't exist
+            if (!is_dir('uploaded_img')) {
+                mkdir('uploaded_img', 0755, true);
+            }
+
+            // Generate unique file name to avoid overwriting
+            $new_image_name = uniqid('user_', true) . '.' . $image_ext;
+            $image_folder = 'uploaded_img/' . $new_image_name;
+
+            // Move uploaded file
+            if (!move_uploaded_file($image['tmp_name'], $image_folder)) {
+                $message[] = 'Failed to upload image.';
+            } else {
+                // Insert user into database
+                $stmt = $conn->prepare("INSERT INTO users (name, email, password, image) VALUES (?, ?, ?, ?)");
+                $stmt->bind_param("ssss", $name, $email, $hashed_pass, $new_image_name);
+
+                if ($stmt->execute()) {
+                    header('Location: login.php');
+                    exit;
+                } else {
+                    $message[] = 'Registration failed: ' . $stmt->error;
+                }
+            }
+        }
+
+        $stmt->close();
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -70,25 +89,26 @@ if (isset($_POST['submit'])) {
     <meta charset="UTF-8" />
     <title>Register</title>
     <link rel="stylesheet" href="css/components.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/all.min.css" />
 </head>
 
 <body>
 
-    <?php
-    if (!empty($message)) {
-        foreach ($message as $msg) {
-            echo '
+<?php
+if (!empty($message)) {
+    foreach ($message as $msg) {
+        echo '
       <div class="message">
          <span>' . htmlspecialchars($msg) . '</span>
-         <i class="fas fa-times" onclick="this.parentElement.remove();"></i>
+         <i class="fa fa-times" onclick="this.parentElement.remove();"></i>
       </div>';
-        }
     }
-    ?>
+}
+?>
+
 <div class="register-body">
     <section class="form-container">
-        <form action="" method="POST" enctype="multipart/form-data">
+        <form action="" method="POST" enctype="multipart/form-data" autocomplete="off">
             <h3>Register now</h3>
             <input type="text" name="name" class="box" placeholder="Enter your name" required />
             <input type="email" name="email" class="box" placeholder="Enter your email" required />

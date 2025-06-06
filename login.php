@@ -3,27 +3,32 @@ include 'config.php';
 session_start();
 
 if (isset($_POST['submit'])) {
-   $email = filter_var($_POST['email'], FILTER_SANITIZE_STRING);
+   $email = trim($_POST['email']);
    $pass = md5($_POST['pass']);
 
-   $stmt = $conn->prepare("SELECT * FROM users WHERE email = ? AND password = ?");
-   $stmt->bind_param("ss", $email, $pass);
-   $stmt->execute();
-   $result = $stmt->get_result();
-
-   if ($result->num_rows > 0) {
-      $row = $result->fetch_assoc();
-
-      if ($row['user_type'] == 'admin') {
-         $_SESSION['admin_id'] = $row['id'];
-         header('location:admin_page.php');
-      } elseif ($row['user_type'] == 'user') {
-         $_SESSION['user_id'] = $row['id'];
-         header('location:userprofile.php');
-      }
-      exit;
+   // Validate email format
+   if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+      $message[] = 'Invalid email format!';
    } else {
-      $message[] = 'Incorrect email or password!';
+      $stmt = $conn->prepare("SELECT * FROM users WHERE email = ? AND password = ?");
+      $stmt->bind_param("ss", $email, $pass);
+      $stmt->execute();
+      $result = $stmt->get_result();
+
+      if ($result->num_rows > 0) {
+         $row = $result->fetch_assoc();
+
+         if ($row['user_type'] == 'admin') {
+            $_SESSION['admin_id'] = $row['id'];
+            header('location:admin_page.php');
+         } elseif ($row['user_type'] == 'user') {
+            $_SESSION['user_id'] = $row['id'];
+            header('location:index.php');
+         }
+         exit;
+      } else {
+         $message[] = 'Incorrect email or password!';
+      }
    }
 }
 ?>

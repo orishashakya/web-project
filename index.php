@@ -1,6 +1,23 @@
+
 <?php
+include "config.php";
 session_start();
+
+$user_id = $_SESSION['user_id'] ?? null;
+$fetch_profile = ['image' => 'default.png'];
+
+if ($user_id) {
+    $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
+    $stmt->bind_param("i", $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    if ($result->num_rows > 0) {
+        $fetch_profile = $result->fetch_assoc();
+    }
+    $stmt->close();
+}
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -24,12 +41,10 @@ session_start();
          <link rel="stylesheet" type="text/css" href="css/style.css">
         <!-- code for linking css file -->
 
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-        <!-- swiper image carosel -->
 </head>
 <body>
     <!-- Header Section -->
-     <header class="header">
+    <header class="header">
         <a href="index.php" class="logo"> 
             <i class="fa fa-cart-plus" aria-hidden="true"></i>
             <span>Grocery Plus</span>
@@ -38,41 +53,80 @@ session_start();
     <nav class="navbar" >
         <a href="index.php">home</a>
         <a href="features.php">features</a>
-        <a href="products.php">products</a>
-        <a href="categories.php">categories</a>
-        <a href="review.php">review</a>
+        <a href="view_page.php">products</a>
+        <a href="orders.php">orders</a>
+        <a href="category.php">categories</a>
         <a href="about.php">about</a>
     </nav>
 
 
 
     <div class="icons">
-        <div class="fa fa-bars" id="menu-btn"></div>
-        <div class="fa fa-search" id="search-btn"></div>
-        <div class="fa fa-shopping-cart" id="cart-btn"></div>
-        <!-- <div class="fa fa-user" id="login-btn"></div> -->
-        
+         <a href="search_page.php" class="fa fa-search"></a>
+         <?php
+         // Count wishlist items
+         $wishlist_count = 0;
+         $wishlist_sql = "SELECT COUNT(*) as count FROM wishlist WHERE user_id = ?";
+         $wishlist_stmt = mysqli_prepare($conn, $wishlist_sql);
+         mysqli_stmt_bind_param($wishlist_stmt, "i", $user_id);
+         mysqli_stmt_execute($wishlist_stmt);
+         $wishlist_result = mysqli_stmt_get_result($wishlist_stmt);
+         if ($wishlist_row = mysqli_fetch_assoc($wishlist_result)) {
+            $wishlist_count = $wishlist_row['count'];
+         }
+
+         // Count cart items
+         $cart_count = 0;
+         $cart_sql = "SELECT COUNT(*) as count FROM cart WHERE user_id = ?";
+         $cart_stmt = mysqli_prepare($conn, $cart_sql);
+         mysqli_stmt_bind_param($cart_stmt, "i", $user_id);
+         mysqli_stmt_execute($cart_stmt);
+         $cart_result = mysqli_stmt_get_result($cart_stmt);
+         if ($cart_row = mysqli_fetch_assoc($cart_result)) {
+            $cart_count = $cart_row['count'];
+         }
+         ?>
+
+         <a href="wishlist.php"><i class="fa fa-heart"></i><span>(<?= $wishlist_count; ?>)</span></a>
+         <a href="cart.php"><i class="fa fa-shopping-cart"></i><span>(<?= $cart_count; ?>)</span></a>
+      </div>
+
+        <?php if (isset($_SESSION['user_id']) && $user_id): ?>
+    <!-- Show user menu when logged in -->
+    <div class="user-menu">
+        <img src="image/<?= htmlspecialchars($fetch_profile['image']) ?>" class="user-icon" id="userMenuToggle" alt="User">
+        <div class="user-dropdown" id="userDropdown">
+            <a href="userprofile.php">Update Profile</a>
+            <a href="logout.php">Logout</a>
+        </div>
     </div>
-        <form class="search-form">
-            <input type="search" id="search-box" placeholder="Search Here....">
-            <label for="search-box" class="fa fa-search"></label>
-        </form>
-        
-        
-
-        
-        
-
-        <form action="register.php" method="POST">
-        <p><a href="register.php">
-        <input type="submit" value="Register" class="reg-btn"></a></p>
-        </form>
-        <form action="login.php" method="POST" >
+<?php elseif (isset($_SESSION['admin_id'])): ?>
+    <!-- Show admin menu when admin is logged in -->
+    <div class="user-menu">
+        <img src="image/default.png" class="user-icon" alt="Admin">
+        <div class="user-dropdown">
+            <a href="admin_profile.php">Admin Panel</a>
+            <a href="logout.php">Logout</a>
+        </div>
+    </div>
+<?php else: ?>
+    <!-- Show register/login when not logged in -->
+    <div class="auth-buttons">
+        <a href="register.php">
+            <input type="button" value="Register" class="reg-btn">
+        </a>
         <a href="login.php">
-          <p>
-        <input type="submit" value="Login" class="log-btn"></P>
-        </form>
-     </header>
+            <input type="button" value="Login" class="log-btn">
+        </a>
+    </div>
+<?php endif; ?>
+    </div>
+
+    <form class="search-form">
+        <input type="search" id="search-box" placeholder="Search Here....">
+        <label for="search-box" class="fa fa-search"></label>
+    </form>
+</header>
     <!-- Header Section -->
 
     <!-- Home Banner Section --> 
@@ -83,7 +137,7 @@ session_start();
            <p> Fresh Products, Great Prices, and Fast Delivery!<br>
             Everything you need in one place!</p>
             <br>
-           <a href="#products" class="btn">Shop Now</a>
+           <a href="view_page.php" class="btn">Shop Now</a>
            
         </div>
     </section>

@@ -8,6 +8,9 @@ if (!$user_id) {
    exit;
 }
 
+$message = [];
+
+// Fetch current user data
 $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
@@ -15,63 +18,93 @@ $result = $stmt->get_result();
 $fetch_profile = $result->fetch_assoc();
 $stmt->close();
 
-$message = [];
-
 if (isset($_POST['update_profile'])) {
-   $name = filter_var($_POST['name'], FILTER_SANITIZE_STRING);
-   $email = filter_var($_POST['email'], FILTER_SANITIZE_STRING);
+   // Sanitize input safely
+   $name = trim($_POST['name']);
+   $email = trim($_POST['email']);
 
+   // Update name and email
    $stmt = $conn->prepare("UPDATE users SET name = ?, email = ? WHERE id = ?");
    $stmt->bind_param("ssi", $name, $email, $user_id);
    $stmt->execute();
    $stmt->close();
 
-   $image = $_FILES['image']['name'];
-   $image = filter_var($image, FILTER_SANITIZE_STRING);
-   $image_size = $_FILES['image']['size'];
-   $image_tmp = $_FILES['image']['tmp_name'];
-   $image_path = 'uploaded_img/' . $image;
-   $old_image = $_POST['old_image'];
+   // Handle image upload securely
+   if (!empty($_FILES['image']['name'])) {
+      $image_tmp = $_FILES['image']['tmp_name'];
+      $image_size = $_FILES['image']['size'];
+      $image_error = $_FILES['image']['error'];
 
-   if (!empty($image)) {
-      if ($image_size > 2000000) {
+      // Check upload error
+      if ($image_error !== UPLOAD_ERR_OK) {
+         $message[] = 'Error uploading image!';
+      } elseif ($image_size > 2 * 1024 * 1024) { // 2MB limit
          $message[] = 'Image too large!';
       } else {
-         $stmt = $conn->prepare("UPDATE users SET image = ? WHERE id = ?");
-         $stmt->bind_param("si", $image, $user_id);
-         $stmt->execute();
-         $stmt->close();
+         $image_info = getimagesize($image_tmp);
+         if ($image_info === false) {
+            $message[] = 'Uploaded file is not a valid image!';
+         } else {
+            $ext = pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION);
+            $new_image_name = 'user_' . $user_id . '_' . time() . '.' . $ext;
+            $image_path = 'uploaded_img/' . $new_image_name;
 
-         if (!is_dir('uploaded_img')) mkdir('uploaded_img', 0777, true);
-         move_uploaded_file($image_tmp, $image_path);
+            if (!is_dir('uploaded_img')) {
+               mkdir('uploaded_img', 0777, true);
+            }
 
-         if ($old_image && file_exists('uploaded_img/' . $old_image)) {
-            unlink('uploaded_img/' . $old_image);
+            if (move_uploaded_file($image_tmp, $image_path)) {
+               // Delete old image if exists
+               if (!empty($fetch_profile['image']) && file_exists('uploaded_img/' . $fetch_profile['image'])) {
+                  unlink('uploaded_img/' . $fetch_profile['image']);
+               }
+
+               // Update DB with new image name
+               $stmt = $conn->prepare("UPDATE users SET image = ? WHERE id = ?");
+               $stmt->bind_param("si", $new_image_name, $user_id);
+               $stmt->execute();
+               $stmt->close();
+
+               $message[] = 'Image updated!';
+            } else {
+               $message[] = 'Failed to move uploaded file!';
+            }
          }
-
-         $message[] = 'Image updated!';
       }
    }
 
-   $old_pass = $_POST['old_pass'];
-   $update_pass = md5($_POST['update_pass']);
-   $new_pass = md5($_POST['new_pass']);
-   $confirm_pass = md5($_POST['confirm_pass']);
-
+   // Handle password update
    if (!empty($_POST['update_pass']) && !empty($_POST['new_pass']) && !empty($_POST['confirm_pass'])) {
-      if ($update_pass !== $old_pass) {
+      // Get current hashed password from DB (server-side)
+      $stmt = $conn->prepare("SELECT password FROM users WHERE id = ?");
+      $stmt->bind_param("i", $user_id);
+      $stmt->execute();
+      $result = $stmt->get_result();
+      $row = $result->fetch_assoc();
+      $current_hash = $row['password'];
+      $stmt->close();
+
+      $old_pass_input = $_POST['update_pass'];
+      $new_pass = $_POST['new_pass'];
+      $confirm_pass = $_POST['confirm_pass'];
+
+      // Verify old password
+      if (!password_verify($old_pass_input, $current_hash)) {
          $message[] = 'Old password incorrect!';
       } elseif ($new_pass !== $confirm_pass) {
-         $message[] = 'Passwords do not match!';
+         $message[] = 'New passwords do not match!';
       } else {
+         // Hash new password and update
+         $new_hash = password_hash($new_pass, PASSWORD_DEFAULT);
          $stmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
-         $stmt->bind_param("si", $confirm_pass, $user_id);
+         $stmt->bind_param("si", $new_hash, $user_id);
          $stmt->execute();
          $stmt->close();
          $message[] = 'Password updated!';
       }
    }
 
+   // Refresh profile data
    $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
    $stmt->bind_param("i", $user_id);
    $stmt->execute();
@@ -81,6 +114,7 @@ if (isset($_POST['update_profile'])) {
 }
 ?>
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -89,8 +123,8 @@ if (isset($_POST['update_profile'])) {
    <link rel="stylesheet" href="css/components.css">
    <style>
       .profile-pic {
-         width: 150px;
-         height: 150px;
+         width: 100px;
+         height: 100px;
          border-radius: 50%;
          object-fit: cover;
          margin-bottom: 1rem;
@@ -99,15 +133,15 @@ if (isset($_POST['update_profile'])) {
 </head>
 <body>
 
-<?php include 'header.php'; ?>
 
+<div class="register-body">
 <section class="update-profile">
    <h1 class="title">Your Profile</h1>
 
    <?php foreach ($message as $msg): ?>
       <div class="message"><span><?= $msg ?></span></div>
    <?php endforeach; ?>
-
+      
    <form action="" method="POST" enctype="multipart/form-data">
       <img src="uploaded_img/<?= htmlspecialchars($fetch_profile['image']) ?>" alt="Profile Picture" class="profile-pic">
 
@@ -139,6 +173,7 @@ if (isset($_POST['update_profile'])) {
       </div>
    </form>
 </section>
+   </div>
 
 <!-- <?php include 'footer.php'; ?> -->
 </body>

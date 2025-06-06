@@ -64,7 +64,24 @@ window.onscroll = () =>{
    profile.classList.remove('active');
    navbar.classList.remove('active');
 }
+/*user in header */
 
+ document.addEventListener('DOMContentLoaded', function () {
+    const icon = document.getElementById('userMenuToggle');
+    const dropdown = document.getElementById('userDropdown');
+
+    if (icon && dropdown) {
+        icon.addEventListener('click', () => {
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!icon.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+    }
+});
 
 
 

@@ -1,5 +1,24 @@
 <?php
+include "config.php";
+?> 
+<?php
+
+if(isset($message)){
+   foreach($message as $message){
+      echo '
+      <div class="message">
+         <span>'.$message.'</span>
+         <i class="fa fa-times" onclick="this.parentElement.remove();"></i>
+      </div>
+      ';
+   }
+}
+
+if (session_status() === PHP_SESSION_NONE) session_start();
+$user_id = $_SESSION['user_id'] ?? 0;
 ?>
+
+
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -20,8 +39,8 @@
         <a href="index.php">home</a>
         <a href="features.php">features</a>
         <a href="products.php">products</a>
-        <a href="categories.php">categories</a>
-        <a href="review.php">review</a>
+        <a href="orders.php">orders</a>
+        <a href="category.php">categories</a>
         <a href="about.php">about</a>
     </nav>
 
@@ -29,44 +48,59 @@
 
     <div class="icons">
         <div class="fa fa-bars" id="menu-btn"></div>
-        <div class="fa fa-search" id="search-btn"></div>
-        <div class="fa fa-shopping-cart" id="cart-btn"></div>
-        <!-- <div class="fa fa-user" id="login-btn"></div> -->
-        
-    </div>
+        <div id="menu-btn" class="fa fa-bars"></div>
+         
+         <a href="search_page.php" class="fa fa-search"></a>
+         <?php
+         // Count wishlist items
+         $wishlist_count = 0;
+         $wishlist_sql = "SELECT COUNT(*) as count FROM wishlist WHERE user_id = ?";
+         $wishlist_stmt = mysqli_prepare($conn, $wishlist_sql);
+         mysqli_stmt_bind_param($wishlist_stmt, "i", $user_id);
+         mysqli_stmt_execute($wishlist_stmt);
+         $wishlist_result = mysqli_stmt_get_result($wishlist_stmt);
+         if ($wishlist_row = mysqli_fetch_assoc($wishlist_result)) {
+            $wishlist_count = $wishlist_row['count'];
+         }
+
+         // Count cart items
+         $cart_count = 0;
+         $cart_sql = "SELECT COUNT(*) as count FROM cart WHERE user_id = ?";
+         $cart_stmt = mysqli_prepare($conn, $cart_sql);
+         mysqli_stmt_bind_param($cart_stmt, "i", $user_id);
+         mysqli_stmt_execute($cart_stmt);
+         $cart_result = mysqli_stmt_get_result($cart_stmt);
+         if ($cart_row = mysqli_fetch_assoc($cart_result)) {
+            $cart_count = $cart_row['count'];
+         }
+         ?>
+
+         <a href="wishlist.php"><i class="fas fa-heart"></i><span>(<?= $wishlist_count; ?>)</span></a>
+         <a href="cart.php"><i class="fas fa-shopping-cart"></i><span>(<?= $cart_count; ?>)</span></a>
+      </div>
+
         <form class="search-form">
             <input type="search" id="search-box" placeholder="Search Here....">
             <label for="search-box" class="fa fa-search"></label>
         </form>
-        <form action="register.php" method="POST">
-        <p><a href="register.php">
-        <input type="submit" value="Register" class="reg-btn"></a></p>
-        </form>
-        <form action="login.php" method="POST" >
-        <a href="login.php">
-          <p>
-        <input type="submit" value="Login" class="log-btn"></P>
-        </form>
+        <?php if (isset($_SESSION['user_id']) || isset($_SESSION['admin_id'])): ?>
+   <!-- User is logged in -->
+   <div class="user-menu">
+      <img src="image/<?= isset($fetch_profile['image']) ? htmlspecialchars($fetch_profile['image']):'default.png' ?>" class="user-icon" id="userMenuToggle" alt="User Icon">
+      <div class="user-dropdown" id="userDropdown">
+         <a href="userprofile.php">Update Profile</a>
+         <a href="logout.php" class="logout-link">Logout</a>
+      </div>
+   </div>
+<?php else: ?>
+   <!-- User not logged in -->
+   <div class="auth-buttons">
+      <a href="login.php" class="log-btn">Login</a>
+      <a href="register.php" class="reg-btn">Register</a>
+   </div>
+<?php endif; ?>
+
+       
      </header>
-    <!-- Header Section -->
-<?php
-if (session_status() === PHP_SESSION_NONE) session_start();
-?>
-
-<header>
-   <nav>
-      <a href="index.php">Home</a>
-
-      <?php if (isset($_SESSION['user_id'])): ?>
-         <a href="userprofile.php" class="btn">My Profile</a>
-         <a href="logout.php" class="btn">Logout</a>
-      <?php elseif (isset($_SESSION['admin_id'])): ?>
-         <a href="admin_page.php" class="btn">Admin Panel</a>
-         <a href="logout.php" class="btn">Logout</a>
-      <?php else: ?>
-         <a href="login.php" class="btn">Login</a>
-         <a href="register.php" class="btn">Register</a>
-      <?php endif; ?>
-   </nav>
-</header>
+   
 
